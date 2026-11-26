@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClubHub | College Club Management</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--primary:#5b5bd6;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+body.dark-mode{--bg:#101522;--card:#1b2435;--text:#f4f6fb;--muted:#b5bfd0;--line:#344054}
+header{background:linear-gradient(120deg,#3434a8,#6969e8);color:white;padding:24px 6%;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+header h1{margin:0;font-size:28px}header p{margin:4px 0 0;color:#e4e4ff}
+nav{display:flex;gap:10px;flex-wrap:wrap;padding:12px 6%;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3}
+button,.btn{border:0;border-radius:9px;padding:10px 14px;background:var(--primary);color:white;cursor:pointer;font-weight:600}
+button.secondary{background:#e8e9ff;color:#3434a8}body.dark-mode button.secondary{background:#30365a;color:#e4e6ff}
+button.outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+main{max-width:1100px;margin:28px auto;padding:0 18px}.hero,.panel,.club-card,.event-card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px}
+.hero{background:linear-gradient(120deg,#ededff,#fff);color:#25256f;margin-bottom:22px}body.dark-mode .hero{background:linear-gradient(120deg,#24264b,#202b40);color:#f4f6fb}
+h2{margin:0 0 14px}.muted{color:var(--muted)}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);margin:5px 0 12px}
+.toolbar input{max-width:340px;margin:0}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
+.club-card h3,.event-card h3{margin:4px 0}.tag{display:inline-block;padding:4px 9px;border-radius:20px;background:#eeeeff;color:#4242a8;font-size:12px}body.dark-mode .tag{background:#30365a;color:#e1e4ff}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.section{margin:26px 0}.hidden{display:none!important}
+.modal{display:none;position:fixed;inset:0;background:#0009;z-index:10;align-items:center;justify-content:center;padding:16px}.modal-box{background:var(--card);color:var(--text);padding:22px;border-radius:14px;width:min(480px,100%);max-height:90vh;overflow:auto}
+.close{float:right;background:#e5e7eb;color:#222;padding:5px 10px}.notice{padding:10px;border-radius:8px;background:#e8f8ee;color:#17643a;margin:10px 0}
+footer{text-align:center;color:var(--muted);padding:25px}
+#topBtn{position:fixed;right:18px;bottom:18px;border-radius:50%;width:46px;height:46px;padding:0}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>🎓 ClubHub</h1><p>Discover • Connect • Participate</p></div>
+ <div><button class="secondary" onclick="toggleDarkMode()">🌙 Dark Mode</button> <button onclick="openLogin()">Student Login</button></div>
+</header>
+<nav>
+ <button class="outline" onclick="goTo('clubs')">Explore Clubs</button>
+ <button class="outline" onclick="goTo('myclubs')">My Clubs</button>
+ <button class="outline" onclick="goTo('events')">Events</button>
+ <button class="outline" onclick="goTo('proposal')">Propose a Club</button>
+</nav>
+<main>
+ <section class="hero">
+  <h2>Find your people. Build your passion.</h2>
+  <p>Explore college clubs, learn about their activities, and join communities that match your interests.</p>
+  <button onclick="goTo('clubs')">Explore Clubs</button>
+ </section>
+ <section id="clubs" class="section">
+  <h2>Explore College Clubs</h2>
+  <p class="muted">Search clubs or filter by category.</p>
+  <div class="toolbar"><input id="searchInput" type="search" placeholder="Search clubs..." oninput="renderClubs()"></div>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="clubGrid"></div>
+ </section>
+ <section id="myclubs" class="section panel">
+  <h2>My Clubs</h2><div id="myClubList" class="grid"><p class="muted">You have not joined any clubs yet.</p></div>
+ </section>
+ <section id="events" class="section">
+  <h2>Upcoming Events</h2><div id="eventGrid" class="grid"></div>
+ </section>
+ <section id="proposal" class="section panel">
+  <h2>Suggest a New Club</h2>
+  <form onsubmit="submitProposal(event)">
+   <label>Club name</label><input id="proposalName" required>
+   <label>Why should this club be started?</label><textarea id="proposalReason" rows="3" required></textarea>
+   <button type="submit">Submit Proposal</button>
+  </form><div id="proposalMessage"></div>
+ </section>
+</main>
+<footer>ClubHub – College Club Management Website | Student Project Prototype</footer>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<div class="modal" id="loginModal"><div class="modal-box">
+ <button class="close" onclick="closeModal('loginModal')">✕</button><h2>Student Login</h2>
+ <form onsubmit="demoLogin(event)"><label>Student Email</label><input type="email" id="loginEmail" required placeholder="student@college.edu">
+ <label>Password</label><input type="password" id="loginPassword" required placeholder="Enter password">
+ <button type="submit">Login</button></form><div id="loginMessage"></div>
+ <p class="muted">Demo only: this prototype does not verify credentials or create secure accounts.</p>
+</div></div>
+<div class="modal" id="detailsModal"><div class="modal-box">
+ <button class="close" onclick="closeModal('detailsModal')">✕</button><div id="detailsContent"></div>
+</div></div>
+<div class="modal" id="joinModal"><div class="modal-box">
+ <button class="close" onclick="closeModal('joinModal')">✕</button><h2>Join Club</h2>
+ <form onsubmit="confirmJoin(event)"><input type="hidden" id="joinClubId">
+ <label>Student name</label><input id="joinName" required>
+ <label>Student email</label><input type="email" id="joinEmail" required>
+ <button type="submit">Confirm Join</button></form><div id="joinMessage"></div>
+</div></div>
+<script>
+const clubs=[
+{id:1,name:"Coding Club",category:"Technology",description:"Learn programming, build projects, and prepare for coding competitions.",activities:"Coding contests, hackathons, peer learning",schedule:"Every Wednesday",members:85},
+{id:2,name:"Robotics Club",category:"Technology",description:"Explore robotics, sensors, automation, and hands-on engineering.",activities:"Robot building, demonstrations, workshops",schedule:"Every Friday",members:42},
+{id:3,name:"Cultural Club",category:"Arts & Culture",description:"Celebrate creativity and culture through performances and events.",activities:"Dance, music, festivals, cultural programs",schedule:"Every Tuesday",members:110},
+{id:4,name:"Photography Club",category:"Arts & Culture",description:"Improve photography skills and tell stories through images.",activities:"Photo walks, editing sessions, exhibitions",schedule:"Twice a month",members:36},
+{id:5,name:"Sports Club",category:"Sports",description:"Bring students together through fitness, games, and teamwork.",activities:"Tournaments, practice sessions, fitness activities",schedule:"Every Saturday",members:95},
+{id:6,name:"Eco Club",category:"Social",description:"Promote sustainability and environmental awareness on campus.",activities:"Tree planting, clean-up drives, awareness campaigns",schedule:"Every Thursday",members:51}
+];
+const events=[
+{title:"Inter-College Coding Challenge",date:"Coming soon",club:"Coding Club"},
+{title:"Campus Cultural Day",date:"Coming soon",club:"Cultural Club"},
+{title:"Photography Exhibition",date:"Coming soon",club:"Photography Club"}
+];
+let activeCategory="All";
+function renderClubs(){
+ const q=document.getElementById("searchInput").value.toLowerCase();
+ const filtered=clubs.filter(c=>(activeCategory==="All"||c.category===activeCategory)&&(c.name.toLowerCase().includes(q)||c.description.toLowerCase().includes(q)));
+ document.getElementById("clubGrid").innerHTML=filtered.map(c=>`<article class="club-card"><span class="tag">${c.category}</span><h3>${c.name}</h3><p class="muted">${c.description}</p><p>👥 ${c.members} sample members</p><div class="card-actions"><button onclick="showDetails(${c.id})">View Details</button><button class="secondary" onclick="openJoin(${c.id})">Join</button></div></article>`).join("")||"<p>No matching clubs found.</p>";
+}
+function renderFilters(){
+ const cats=["All",...new Set(clubs.map(c=>c.category))];
+ document.getElementById("filters").innerHTML=cats.map(c=>`<button class="${activeCategory===c?"":"secondary"}" onclick="setCategory('${c}')">${c}</button>`).join("");
+}
+function setCategory(c){activeCategory=c;renderFilters();renderClubs()}
+function showDetails(id){
+ const c=clubs.find(x=>x.id===id);
+ document.getElementById("detailsContent").innerHTML=`<span class="tag">${c.category}</span><h2>${c.name}</h2><p>${c.description}</p><p><b>Activities:</b> ${c.activities}</p><p><b>Meeting:</b> ${c.schedule}</p><p><b>Sample members:</b> ${c.members}</p><button onclick="closeModal('detailsModal');openJoin(${c.id})">Join this club</button>`;
+ document.getElementById("detailsModal").style.display="flex";
+}
+function openJoin(id){document.getElementById("joinClubId").value=id;document.getElementById("joinMessage").innerHTML="";document.getElementById("joinModal").style.display="flex"}
+function getMemberships(){return JSON.parse(localStorage.getItem("clubhub_memberships")||"[]")}
+function confirmJoin(e){
+ e.preventDefault();const id=Number(document.getElementById("joinClubId").value);const c=clubs.find(x=>x.id===id);let list=getMemberships();
+ if(list.some(x=>x.id===id)){document.getElementById("joinMessage").innerHTML='<p class="notice">You have already joined this club.</p>';return}
+ list.push({id,name:document.getElementById("joinName").value,email:document.getElementById("joinEmail").value,date:new Date().toLocaleDateString()});
+ localStorage.setItem("clubhub_memberships",JSON.stringify(list));
+ document.getElementById("joinMessage").innerHTML=`<p class="notice">You joined ${c.name} successfully!</p>`;renderMyClubs();
+}
+function renderMyClubs(){
+ const list=getMemberships();const el=document.getElementById("myClubList");
+ el.innerHTML=list.length?list.map(m=>{const c=clubs.find(x=>x.id===m.id);return `<article class="club-card"><h3>${c?c.name:"Club"}</h3><p class="muted">Joined on ${m.date}</p><p>${c?c.schedule:""}</p><button class="outline" onclick="leaveClub(${m.id})">Leave Club</button></article>`}).join(""):'<p class="muted">You have not joined any clubs yet.</p>';
+}
+function leaveClub(id){if(confirm("Are you sure you want to leave this club?")){localStorage.setItem("clubhub_memberships",JSON.stringify(getMemberships().filter(x=>x.id!==id)));renderMyClubs()}}
+function renderEvents(){document.getElementById("eventGrid").innerHTML=events.map(e=>`<article class="event-card"><span class="tag">${e.club}</span><h3>${e.title}</h3><p class="muted">${e.date}</p></article>`).join("")}
+function openLogin(){document.getElementById("loginMessage").innerHTML="";document.getElementById("loginModal").style.display="flex"}
+function demoLogin(e){e.preventDefault();document.getElementById("loginMessage").innerHTML='<p class="notice">Demo login successful!</p>'}
+function toggleDarkMode(){document.body.classList.toggle("dark-mode");localStorage.setItem("clubhub_dark",document.body.classList.contains("dark-mode")?"on":"off")}
+function submitProposal(e){e.preventDefault();document.getElementById("proposalMessage").innerHTML='<p class="notice">Thank you! Your club proposal has been recorded for this demo.</p>';e.target.reset()}
+function closeModal(id){document.getElementById(id).style.display="none"}
+function goTo(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
+if(localStorage.getItem("clubhub_dark")==="on")document.body.classList.add("dark-mode");
+renderFilters();renderClubs();renderMyClubs();renderEvents();
+</script>
+</body>
+</html>
